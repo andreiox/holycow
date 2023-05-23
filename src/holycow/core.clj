@@ -22,6 +22,7 @@
 ;write file with 5 letter words
 ;(->> words
      ;(filter #(= 5 (count %)))
+     ;(map deaccent)
      ;(string/join "\n")
      ;(spit five-letter-words-path))
 
@@ -50,7 +51,7 @@
 (defn gen-score
   [word occurrences]
   {:word word
-   :score (reduce #(+ %1 (get occurrences %2)) 0 (re-seq #"." word))})
+   :score (reduce #(+ %1 (get occurrences %2)) 0 (distinct (re-seq #"." word)))})
 
 (def ranks
   (->> five-letter-words
@@ -58,48 +59,49 @@
        (sort-by :score)
        reverse))
 
+;TODO refactor: maybe use build-regex-any-letter-except
 (defn build-pattern-contains-distinct-chars
   [word]
   (re-pattern (str ".*(" (string/join "|" (distinct word)) ").*")))
 
-(def strongest-pair
-  (let [strongest-batman (first ranks)
+(defn start-game
+  []
+  (let [strongest-batman (second ranks)
         robin-pattern (build-pattern-contains-distinct-chars (:word strongest-batman))
         strongest-robin (second (filter (fn [word] (not (re-matches robin-pattern (:word word)))) ranks))]
     {:first strongest-batman
      :second strongest-robin}))
 
-;start game
-(println strongest-pair)
+(defn build-regex-any-letter-except
+  [letters]
+  (if (empty? letters)
+    "."
+    (str "[a-z&&[^" letters "]]")))
 
-;(defn build-regex-any-letter-except
-  ;[letters]
-  ;(if (empty? letters)
-    ;"."
-    ;(str "[a-z&&[^" letters "]]")))
+(defn get-pattern-for-position
+  [position]
+  (if (empty? (:correct position))
+    (build-regex-any-letter-except (:wrong position))
+    (:correct position)))
 
-;(defn get-pattern-for-position
-  ;[position]
-  ;(if-let [correct (:correct position)]
-    ;correct
-    ;(build-regex-any-letter-except (:wrong position))))
+(defn build-query-regex
+  [game-state]
+  (->> game-state
+       :positions
+       (map get-pattern-for-position)
+       (apply str)
+       re-pattern))
 
-;(defn build-query-regex
-  ;[game-state]
-  ;(->> game-state
-       ;:positions
-       ;(map get-pattern-for-position)
-       ;(apply str)
-       ;re-pattern))
+(defn mid-game
+  []
+  (let [game-state {:positions [{:correct "" :wrong ""}
+                                {:correct "" :wrong ""}
+                                {:correct "" :wrong ""}
+                                {:correct "" :wrong ""}
+                                {:correct "" :wrong ""}]
+                    :contains [""]}]
+    (take 10 (filter #(and (re-matches (build-query-regex game-state) (:word %))
+                           (every? (fn [letter] (string/includes? (:word %) letter)) (:contains game-state))) ranks))))
 
-;;mid-late game
-;(def game-state
-  ;{:positions [{:correct "" :wrong ""}
-               ;{:correct "" :wrong ""}
-               ;{:correct "" :wrong ""}
-               ;{:correct "" :wrong ""}
-               ;{:correct "" :wrong ""}]
-   ;:contains [""]})
-
-;(take 10 (filter #(and (re-matches (build-query-regex game-state) (:word %))
-                       ;(every? (fn [letter] (string/includes? (:word %) letter)) (:contains game-state))) ranks))
+;(start-game)
+;(mid-game)
