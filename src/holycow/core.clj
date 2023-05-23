@@ -70,21 +70,36 @@
      :second strongest-robin}))
 
 ;start game
-;(println strongest-pair)
+(println strongest-pair)
 
-(defn build-any-location-pattern
-  [tip]
-  (re-pattern (string/lower-case (string/replace tip #"_" ".*"))))
+;(defn build-regex-any-letter-except
+  ;[letters]
+  ;(if (empty? letters)
+    ;"."
+    ;(str "[a-z&&[^" letters "]]")))
 
-(defn build-exact-location-pattern
-  [tip]
-  (let [pattern (map #(cond
-                        (Character/isUpperCase (char %)) (string/lower-case %)
-                        :else ".{1}") (seq tip))]
-    (re-pattern (string/join pattern))))
+;(defn get-pattern-for-position
+  ;[position]
+  ;(if-let [correct (:correct position)]
+    ;correct
+    ;(build-regex-any-letter-except (:wrong position))))
 
-;mid-late game
-;(def tip "___rA") ;TODO add support for "letter doesnt exist in this position"
+;(defn build-query-regex
+  ;[game-state]
+  ;(->> game-state
+       ;:positions
+       ;(map get-pattern-for-position)
+       ;(apply str)
+       ;re-pattern))
 
-;(take 3 (filter #(and (re-matches (build-exact-location-pattern tip) (:word %))
-                      ;(re-matches (build-any-location-pattern tip) (:word %))) ranks))
+;;mid-late game
+;(def game-state
+  ;{:positions [{:correct "" :wrong ""}
+               ;{:correct "" :wrong ""}
+               ;{:correct "" :wrong ""}
+               ;{:correct "" :wrong ""}
+               ;{:correct "" :wrong ""}]
+   ;:contains [""]})
+
+;(take 10 (filter #(and (re-matches (build-query-regex game-state) (:word %))
+                       ;(every? (fn [letter] (string/includes? (:word %) letter)) (:contains game-state))) ranks))
