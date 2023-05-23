@@ -64,9 +64,26 @@
 (def strongest-pair
   (let [strongest-batman (first ranks)
         robin-pattern (build-pattern-contains-distinct-chars (:word strongest-batman))
-        strongest-robin (first (filter (fn [word] (not (re-matches robin-pattern (:word word)))) ranks))]
+        strongest-robin (second (filter (fn [word] (not (re-matches robin-pattern (:word word)))) ranks))]
     {:first strongest-batman
-     :second strongest-robin
-     :score (+ (:score strongest-batman) (:score strongest-robin))}))
+     :second strongest-robin}))
 
-strongest-pair
+;start game
+;(println strongest-pair)
+
+(defn build-any-location-pattern
+  [tip]
+  (re-pattern (string/lower-case (string/replace tip #"_" ".*"))))
+
+(defn build-exact-location-pattern
+  [tip]
+  (let [pattern (map #(cond
+                        (Character/isUpperCase (char %)) (string/lower-case %)
+                        :else ".{1}") (seq tip))]
+    (re-pattern (string/join pattern))))
+
+;mid-late game
+;(def tip "___rA") ;TODO add support for "letter doesnt exist in this position"
+
+;(take 3 (filter #(and (re-matches (build-exact-location-pattern tip) (:word %))
+                      ;(re-matches (build-any-location-pattern tip) (:word %))) ranks))
